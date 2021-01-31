@@ -22,7 +22,7 @@ async def read_item(item_id: str):
     return {"name": fake_items_db[item_id]["name"], "item_id": item_id}
 
 
-@router.put("/{item_id", tags=["custom"], responses={403:{"description":"Operarion forbidden"}})
+@router.put("/{item_id}", tags=["custom"], responses={403:{"description":"Operarion forbidden"}})
 async def update_item(item_id: str):
     if item_id != "plumbus":
         raise HTTPException(
