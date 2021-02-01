@@ -1,21 +1,15 @@
 from fastapi import Depends, FastAPI
 
-from .dependencies import get_query_token, get_toker_header
+from . import auth
 from .internal import admin
 from .routers import items, users
 
-app = FastAPI(dependencies=[Depends(get_query_token)])
+app = FastAPI()
 
 
 app.include_router(users.router)
 app.include_router(items.router)
-app.include_router(
-    admin.router,
-    prefix="/admin",
-    tags=["admin"],
-    dependencies=[Depends(get_toker_header)],
-    responses={418: {"description": "I'm a teapot"}}
-)
+app.include_router(auth.router)
 
 
 @app.get("/")

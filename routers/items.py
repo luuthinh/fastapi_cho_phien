@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..dependencies import get_toker_header
 
-router = APIRouter(prefix="/items", tags=["items"], 
-                   dependencies=[Depends(get_toker_header)], 
-                   responses={404:{"description": "Not found"}}
+router = APIRouter(prefix="/items", tags=["san pham"],
+                   responses={404: {"description": "Not found"}}
                    )
 
 
