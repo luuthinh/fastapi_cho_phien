@@ -17,11 +17,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/token")
 
 fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
+    "thinh": {
+        "username": "thinh",
         "full_name": "John Doe",
         "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+        "hashed_password": "$2b$12$Ng5msG7qK5ZFPWy/n6l1ROinVr398w9Wt/2aC0iYUmfcl.KdPPJgi",
         "disabled": False,
     }
 }
@@ -108,7 +108,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
-@router.post("/api/v1/token", response_model=Token)
+@router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm= Depends()):
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     if not user:
@@ -122,4 +122,9 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm= Depends()
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": 'bearer'}
+
+
+@router.get("/users/me", response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    return current_user
 

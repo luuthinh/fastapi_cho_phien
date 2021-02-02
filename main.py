@@ -9,7 +9,7 @@ app = FastAPI()
 
 app.include_router(users.router)
 app.include_router(items.router)
-app.include_router(auth.router)
+app.include_router(auth.router,prefix='/api/v1',tags=["Auth"])
 
 
 @app.get("/")
