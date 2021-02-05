@@ -1,17 +1,5 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
+from starlette.exceptions import HTTPException
+from starlette.middleware.cors import CORSMiddleware
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from . import auth
-from .internal import admin
-from .routers import items, users
-
-app = FastAPI()
-
-
-app.include_router(users.router)
-app.include_router(items.router)
-app.include_router(auth.router,prefix='/api/v1',tags=["Auth"])
-
-
-@app.get("/")
-async def root():
-    return {"message": 'Hello Bigger Applications'}
