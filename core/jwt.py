@@ -9,7 +9,7 @@ from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 from ..crud.user import get_user
 from ..db.mongodb import AsyncIOMotorClient, get_database
-from ..models.token import TokenPayLoad
+from ..models.token import TokenPayload
 from ..models.user import User
 
 from .config import JWT_TOKEN_PREFIX, SECRET_KEY
@@ -28,11 +28,11 @@ def _get_authorization_token(authorization: str = Header(...)):
 
 
 async def _get_current_user(
-    db: AsyncIOMotorClient = Depends(get_database), token: str = Depends(_get_authorization_token): 
+    db: AsyncIOMotorClient = Depends(get_database), token: str = Depends(_get_authorization_token)
 ) -> User:
     try:
         payload = jwt.decode(token, str(SECRET_KEY), algorithms=[ALGORITHM])
-        token_data = TokenPayLoad(**payload)
+        token_data = TokenPayload(**payload)
     except PyJWTError:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"

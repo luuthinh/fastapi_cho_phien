@@ -19,7 +19,7 @@ async def http_422_error_handler(request: Request, exc: HTTPException) -> JSONRe
     errors = {"body":[]}
     if isinstance(exc.detail, Iterable) and not isinstance(exc.detail, str):
         for error in exc.detail:
-            error_name = "."join(error["loc"][1:])
+            error_name = ".".join(error["loc"][1:])
             errors["body"].append({error_name: error["msg"]})
     else:
         errors["body"].append(exc.detail)

@@ -2,4 +2,6 @@ fastapi==0.63.0
 motor== 2.3.0
 uvicorn==0.13.3
 pydantic[email]
+pydantic[url]
 passlib[bcrypt]
+pyjwt==2.0.1

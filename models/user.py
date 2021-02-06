@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import EmailStr, UrlStr
+from pydantic import EmailStr
 
 from .dbmodel import DBModelMixin
 from .rwmodel import RWModel
@@ -10,7 +10,7 @@ class UserBase(RWModel):
     username: str
     email: EmailStr
     bio: Optional[str] = ''
-    image: Optional[UrlStr] = None
+    image: Optional[str] = None
 
 
 class UserInDB(DBModelMixin, UserBase):
@@ -47,4 +47,4 @@ class UserInUpdate(RWModel):
     email: Optional[str] = None 
     password: Optional[str] = None
     bio: Optional[str] = None
-    image: Optional[UrlStr] = None
+    image: Optional[str] = None

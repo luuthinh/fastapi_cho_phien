@@ -1,6 +1,6 @@
 from ..db.mongodb import AsyncIOMotorClient
 from pydantic import EmailStr
-from bson.objectid import Objectid 
+from bson.objectid import ObjectId
 
 from ..core.config import database_name, users_collection_name
 from ..models.user import UserInCreate, UserInDB, UserInUpdate
@@ -12,7 +12,7 @@ async def get_user(conn: AsyncIOMotorClient, username: str) -> UserInDB:
         return UserInDB(**row)
 
 
-async def get_user_by_email(conn: AsyncIOMotorClient, email:EmailStr) -> UserInDB:
+async def get_user_by_email(conn: AsyncIOMotorClient, email: EmailStr) -> UserInDB:
     row = await conn[database_name][users_collection_name].find_one({"email": email})
     if row:
         return UserInDB(**row)
@@ -25,8 +25,8 @@ async def create_user(conn: AsyncIOMotorClient, user: UserInCreate) -> UserInDB:
     row = await conn[database_name][users_collection_name].insert_one(db_user.dict())
 
     db_user.id = row.inserted_id
-    db_user.created_at = Objectid(db_user.id).generation_time
-    db_user.updated_at = Objectid(db_user.id).generation_time
+    db_user.created_at = ObjectId(db_user.id).generation_time
+    db_user.updated_at = ObjectId(db_user.id).generation_time
 
     return db_user
 
