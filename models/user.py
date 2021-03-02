@@ -13,7 +13,7 @@ class UserBase(RWModel):
     image: Optional[str] = None
 
 
-class UserInDB(DBModelMixin, UserBase):
+class UserInDB(UserBase):
     salt: str = ""
     hashed_password: str = ""
 

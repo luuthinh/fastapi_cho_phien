@@ -21,10 +21,18 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.add_event_handler("startup", connect_to_mongo)
-app.add_event_handler("shutdown", close_mongo_connection)
+@app.on_event("startup")
+async def startup_event():
+    await connect_to_mongo()
 
-app.add_exception_handler(HTTPException, http_error_handler)
-app.add_exception_handler(HTTP_422_UNPROCESSABLE_ENTITY, http_422_error_handler)
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_mongo_connection()
+
+# app.add_event_handler("startup", connect_to_mongo)
+# app.add_event_handler("shutdown", close_mongo_connection)
+
+# app.add_exception_handler(HTTPException, http_error_handler)
+# app.add_exception_handler(HTTP_422_UNPROCESSABLE_ENTITY, http_422_error_handler)
 
 app.include_router(api_router, prefix=API_V1_STR)

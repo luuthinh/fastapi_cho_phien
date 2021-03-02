@@ -20,7 +20,7 @@ ALLOWED_HOSTS = CommaSeparatedStrings(os.getenv("ALLOWED_HOSTS", ""))
 
 MONGODB_URL = os.getenv("MONGODB_URL", "")
 if not MONGODB_URL:
-    MONGO_HOST = os.getenv("MONGO_HOST", "192.168.1.100")
+    MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
     MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))
     MONGO_USER = os.getenv("MONGO_USER", "userdb")
     MONGO_PASS = os.getenv("MONGO_PASSWORD", "pass")
