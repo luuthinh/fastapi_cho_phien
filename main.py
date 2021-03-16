@@ -1,38 +1,48 @@
+import logging
+
 from fastapi import FastAPI
-from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from motor.motor_asyncio import AsyncIOMotorClient
 
-from .api.api_V1.api import router as api_router
-from .core.config import ALLOWED_HOSTS, API_V1_STR, PROJECT_NAME
-from .core.errors import http_422_error_handler, http_error_handler
-from .db.mongodb_utils import close_mongo_connection, connect_to_mongo
+from .api import router
+from .core import config
+from .core.db import database
 
-app = FastAPI(title=PROJECT_NAME)
+app = FastAPI(title="Blog API")
 
-if not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ["*"]
+origins= [
+    'http://localhost:8000',
+    'http://localhost:8080',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1:8080'
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_HOSTS,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
+
 @app.on_event("startup")
-async def startup_event():
-    await connect_to_mongo()
+async def event_startup():
+    from .core.db import database
+    logging.info("connect to database....")
+    database.client = AsyncIOMotorClient('localhost', 27017)
+    logging.info("Connected to database!")
+
+    logging.info("ensuring model indexes")
+    from .models import ensure_indexes
+    await ensure_indexes()
+
 
 @app.on_event("shutdown")
-async def shutdown_event():
-    await close_mongo_connection()
+async def event_shutdown():
+    logging.info("close mongodb connection....")
+    database.client.close()
+    logging.info("connection to mongodb has been closed!")
 
-# app.add_event_handler("startup", connect_to_mongo)
-# app.add_event_handler("shutdown", close_mongo_connection)
 
-# app.add_exception_handler(HTTPException, http_error_handler)
-# app.add_exception_handler(HTTP_422_UNPROCESSABLE_ENTITY, http_422_error_handler)
-
-app.include_router(api_router, prefix=API_V1_STR)
+app.include_router(router, prefix='/api/v1')
