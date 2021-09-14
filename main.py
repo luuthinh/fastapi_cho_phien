@@ -1,30 +1,81 @@
-from fastapi import FastAPI
-from starlette.exceptions import HTTPException
+# -*- coding:utf-8 -*-
+
+import os
+import io
+import base64
+import tempfile
+
+from os import getcwd, remove
+from PIL import Image
+from image_process import cleanup, resize_image, crop_image
+
+from typing import List
+from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
+from fastapi.responses import JSONResponse, Response, StreamingResponse
+# from starlette.background import BackgroundTask
+from starlette.responses import FileResponse
 from starlette.middleware.cors import CORSMiddleware
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from .api.api_V1.api import router as api_router
-from .core.config import ALLOWED_HOSTS, API_V1_STR, PROJECT_NAME
-from .core.errors import http_422_error_handler, http_error_handler
-from .db.mongodb_utils import close_mongo_connection, connect_to_mongo
-
-app = FastAPI(title=PROJECT_NAME)
-
-if not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ["*"]
-
+app = FastAPI()
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_HOSTS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
 
-app.add_event_handler("startup", connect_to_mongo)
-app.add_event_handler("shutdown", close_mongo_connection)
+@app.post("/source/upload")
+async def upload_file(files: List[UploadFile] = File(...), path_file: str = Form(...)):
+    asolute_path = os.getcwd() + '/' + path_file
+    if not os.path.isdir(asolute_path):
+        # Tạo folder chứa file
+        try:
+            os.mkdir(asolute_path)
+        except OSError as error:
+            return JSONResponse(content={"error_message": "File not found"}, status_code=404)
+    # Duyệt wa các file
+    res_url = []
+    for file in files:
+        if not file.filename:
+             return JSONResponse(content={"error_message": "Not file to upload"}, status_code=404)   
+        # Kiểm tra đuôi file mở rộng của file upload
+        file_name , file_extention = os.path.splitext(file.filename)
+        print(file_name, file_extention)
+        if file_extention.lower() not in ['.png','.jpg'] :
+            return JSONResponse(content={"error_message": "Chỉ có thể tải file có đuôi mở rộng .png hoặc .jpg"}, status_code=404)
+        
+        im = Image.open(io.BytesIO(await file.read()))
+        # Kiểm tra ảnh upload width=height crop
 
-app.add_exception_handler(HTTPException, http_error_handler)
-app.add_exception_handler(HTTP_422_UNPROCESSABLE_ENTITY, http_422_error_handler)
+        crop_image(im).save(asolute_path + '/' + file.filename)
+        res_url.append({'url': path_file  + '/' + file.filename, 
+                        'filename': file.filename})
+    return JSONResponse(content={"result": res_url}, status_code=200)
 
-app.include_router(api_router, prefix=API_V1_STR)
+@app.get("/source/download/{file_path:path}")
+def download_file(file_path: str):
+    return FileResponse(path=getcwd() + "/" + file_path, media_type='application/octet-stream')
+
+@app.get("/source/read/{file_path:path}")
+def get_file(file_path:str, background_tasks: BackgroundTasks, width: int = 0, height: int = 0):
+    # Kiểm tra thư mục đã tồn tại
+    asolute_path = os.getcwd() + '/' + file_path
+    if not os.path.isfile(asolute_path):
+        return JSONResponse(content={
+            "error_message": "File not found"
+            }, status_code=404)
+    path_temp = resize_image(asolute_path, width, height)
+    file_name , file_extention = os.path.splitext(path_temp)  
+    background_tasks.add_task(cleanup,path_temp)
+    return FileResponse(path_temp, media_type='image/' + file_extention[1:] )
+
+@app.delete("/source/delete/{file_path:path}")
+def delete_file(file_path: str):
+    try:
+        remove(getcwd() + "/" + file_path)
+        return JSONRepsponse(content={
+            'removed': True,
+            }, status_code=200)
+    except FileNotFoundError:
+        return JSONRepsponse(content={
+            "removed": False,
+            "error_message": "File not found"
+            }, status_code=404)
+    
