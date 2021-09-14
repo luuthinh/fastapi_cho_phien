@@ -12,7 +12,6 @@ from image_process import cleanup, resize_image, crop_image
 from typing import List
 from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import JSONResponse, Response, StreamingResponse
-# from starlette.background import BackgroundTask
 from starlette.responses import FileResponse
 from starlette.middleware.cors import CORSMiddleware
 
@@ -78,4 +77,3 @@ def delete_file(file_path: str):
             "removed": False,
             "error_message": "File not found"
             }, status_code=404)
-    
